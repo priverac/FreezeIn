@@ -12,6 +12,8 @@
 #include <cstdio>/*provides printf*/
 #include <string>/*to use string data type*/
 #include <vector>/*provides std::vector*/
+#include <sstream>/*provides istringstream*/
+#include <stdexcept>/*provides runtime_error*/
 
 //Boost C++ library
 #include <boost/math/special_functions/bessel.hpp>/*provides bessel-K function*/
@@ -69,6 +71,10 @@ const long double s2W = 2.0L*sqrt(sW2 - sW2*sW2); /*Sin(2 ThetaW)*/
 //Linear interpolation function
 long double interp(long double x, const vector<long double> &xData,
               const vector<long double> &yData, bool extrapolate) {
+
+    if (xData.size() < 2 || yData.size() < 2) {
+        throw runtime_error("interp: input arrays are too small. Did Read_gstar() load correctly?");
+    }
 
     //Check if x is increasing/decreasing
     bool increasing = xData[1] > xData[0];
@@ -168,10 +174,20 @@ void Read_gstar(const string& choice, const string& gstarpath) {
     else if (choice == "HP_B3") { filename = "gstar/HP_B3.tab"; }
     else if (choice == "HP_C") { filename = "gstar/HP_C.tab"; }
 
-    //prepend the path to the gstar folder to the filename
-    filename = gstarpath + "/" + filename;
+    //Accept either:
+    //1) gstarpath = project root (expects gstar/std.tab), or
+    //2) gstarpath = direct gstar folder (expects std.tab)
+    string filename_root = gstarpath + "/" + filename;
+    string basename = filename.substr(filename.find_last_of('/') + 1);
+    string filename_direct = gstarpath + "/" + basename;
 
-    ifstream file(filename);
+    ifstream file(filename_root);
+    string loaded_filename = filename_root;
+    if (!file.is_open()) {
+        file.clear();
+        file.open(filename_direct);
+        loaded_filename = filename_direct;
+    }
     //If a file is open, read line-by-line to extract three values (r1, r2, r3)
     //from each line and store them in the corresponding global vectors
     if (file.is_open()) {
@@ -187,7 +203,11 @@ void Read_gstar(const string& choice, const string& gstarpath) {
         file.close();
     }
     else {
-        cout << "Unable to open the file:" << filename << endl;
+        throw runtime_error("Read_gstar: unable to open file: " + filename_root + " or " + filename_direct);
+    }
+
+    if (Tvec.size() < 3 || gstarvec.size() < 3 || gstarSvec.size() < 3) {
+        throw runtime_error("Read_gstar: loaded fewer than 3 data rows from: " + loaded_filename);
     }
 
     tempvec = slopearray(Tvec, gstarvec);
@@ -251,17 +271,15 @@ long double HoverHbarVisible(long double T) {
 /******************************************/
 
 //Fully averaged matrix element squared for f f -> Aprime -> chi chi
-long double M2_ffchichi(long double s, long double mchi, long double mf,long double kappa, long double Nf, long double Qf,long double ma) {
+long double M2_ffchichi(long double s, long double mchi, long double mf,long double gD, long double Nf, long double qH,long double ma) {
 
-    //Vector (Vf) and Axial (Af) pieces of Aprime f f couplings
-    long double Vf = 0.5L*kappa*Qf;
-    long double Af = 0.5L*kappa*Qf;
+    //Axial (Af) piece of Aprime f f couplings
+    long double Af = 0.5L*gD*qH;
 
-    //Vector(Vc) and Axial (Ac) pieces of Aprime chi chi couplings
-    long double Vc = 0.5L*kappa*1.0L;
-    long double Ac = 0.5L*kappa*1.0L;
+    //Axial (Ac) piece of Aprime chi chi couplings
+    long double Ac = 0.5L*gD*1.0L;
 
-    return (1.0L/(2.0L*M_PI))*((1.0L/(12.0L*pow(M_PI,2.0L)))*((1.0L+12.0L*mchi*mchi*mf*mf/pow(ma,4.0L))*Af*Af*Ac*Ac+Af*Af*Vc*Vc+Vf*Vf*Ac*Ac+Vf*Vf*Vc*Vc)+(1.0L/s)*(1.0L/(6*pow(M_PI,2.0L)))*(-2.0L*(mf*mf+mchi*mchi+6.0L*mf*mf*mchi*mchi/pow(ma,2.0L))*Af*Af*Ac*Ac+(mchi*mchi-2.0L*mf*mf)*Af*Af*Ac*Ac+(mf*mf-2.0L*mchi*mchi)*Vf*Vf*Ac*Ac+(mf*mf+mchi*mchi)*Vf*Vf*Vc*Vc)+(1.0L/pow(s,2.0L))*(mf*mf*mchi*mchi/(3.0L*pow(M_PI,2.0L)))*(7*Af*Af*Ac*Ac-2.0L*(Af*Af*Vc*Vc+Vf*Vf*Ac*Ac)+Vf*Vf*Vc*Vc));
+    return (16.0L * pow(Af, 2) * pow(Ac, 2) * pow(mf, 2) * pow(mchi, 2)) / pow(ma, 4);
 }
 
 /****************************************/
@@ -269,59 +287,44 @@ long double M2_ffchichi(long double s, long double mchi, long double mf,long dou
 /****************************************/
 
 //Number-density collision term for f f -> Aprime/Z -> Chi Chi
-long double CollisionNum_ffchichi(long double T, long double mchi,long double mf, long double kappa,long double Nf, long double Qf,long double ma, long double LambdaQCD) {
+long double CollisionNum_ffchichi(long double T, long double mchi,long double mf, long double gD,long double Nf, long double qH,long double ma, long double LambdaQCD) {
 
     if ( ( Nf == 1.0L ) || ( (Nf == 3.0L) && (T > LambdaQCD) ) ) {
 
         auto integrand_s = [=] (long double s) {
-            return M2_ffchichi(s, mchi, mf, kappa, Nf, Qf, ma) * (s*s/pow(s-ma*ma,2.0L)) * sqrt(1.0L - 4.0L*mchi*mchi/s) * sqrt(1.0L - 4.0L*mf*mf/s) * sqrt(s) * boost::math::cyl_bessel_k(1, sqrt(s)/T);
+            return M2_ffchichi(s, mchi, mf, gD, Nf, qH, ma) * sqrt(1.0L - 4.0L*mchi*mchi/s) * sqrt(1.0L - 4.0L*mf*mf/s) * sqrt(s) * boost::math::cyl_bessel_k(1, sqrt(s)/T);
         };
         
-        return (T/(8*M_PI*pow(2.0L*M_PI, 3))) *
-               exp_sinh<long double>().integrate(integrand_s,
-                                            max(4.0L*mf*mf, 4.0L*mchi*mchi),
-                                            INFINITY);
+        return (T/(pow(8.0L*M_PI, 2)*pow(2.0L*M_PI, 3))) *
+               exp_sinh<long double>().integrate(integrand_s, max(4.0L*mf*mf, 4.0L*mchi*mchi), INFINITY);
     }
     else { return 0.0L; }
 }
 
 //Sum of all number-density collision terms for portal freeze-in
-long double CollisionNum_chi(long double T, long double mchi, long double kappa, long double qhu, long double qhd, long double ma, long double anom_mass, long double LambdaQCD) {
+//qh1 for leptons, thetaD for quarks.
+long double CollisionNum_chi(long double T, long double mchi, long double gD, long double qh1, long double thetaD, long double ma, long double anom_mass, long double LambdaQCD) {
 
-    long double result = CollisionNum_ffchichi(T, mchi, Me, kappa,
-                                               1.0L, qhd, ma,
-                                               LambdaQCD) + /*e*/
-                         CollisionNum_ffchichi(T, mchi, Mmu, kappa,
-                                               1.0L, qhd, ma,
-                                               LambdaQCD) + /*mu*/
-                         CollisionNum_ffchichi(T, mchi, Mta, kappa,
-                                               1.0L, qhd, ma,
-                                               LambdaQCD) + /*ta*/
-                         CollisionNum_ffchichi(T, mchi, Mu, kappa,
-                                               3.0L, qhu, ma,
-                                               LambdaQCD) + /*u*/
-                         CollisionNum_ffchichi(T, mchi, Mc, kappa,
-                                               3.0L, qhu, ma,
-                                               LambdaQCD) + /*c*/
-                         CollisionNum_ffchichi(T, mchi, Mt, kappa,
-                                               3.0L, qhu, ma,
-                                               LambdaQCD) + /*t*/
-                         CollisionNum_ffchichi(T, mchi, Md, kappa,
-                                               3.0L, qhd, ma,
-                                               LambdaQCD) + /*d*/
-                         CollisionNum_ffchichi(T, mchi, Ms, kappa,
-                                               3.0L, qhd, ma,
-                                               LambdaQCD) + /*s*/
-                         CollisionNum_ffchichi(T, mchi, Mb, kappa,
-                                               3.0L, qhd, ma,
-                                               LambdaQCD) /*b*/;
+    long double result = CollisionNum_ffchichi(T, mchi, Me, gD, 1.0L, qh1, ma, LambdaQCD) + /*e*/
+
+                         CollisionNum_ffchichi(T, mchi, Mmu, gD, 1.0L, qh1, ma, LambdaQCD) + /*mu*/
+
+                         CollisionNum_ffchichi(T, mchi, Mta, gD, 1.0L, qh1, ma, LambdaQCD); /*ta*/
 
     if (anom_mass != 0.0) {
-        result = result + CollisionNum_ffchichi(T, mchi, anom_mass, kappa, 3.0L, qhu, ma, LambdaQCD) /*U*/ + CollisionNum_ffchichi(T, mchi, anom_mass, kappa, 3.0L, qhd, ma, LambdaQCD) /*D*/ + CollisionNum_ffchichi(T, mchi, anom_mass, kappa, 1.0L, qhd, ma, LambdaQCD) /*E*/;
+        result = result  + CollisionNum_ffchichi(T, mchi, anom_mass, gD, 1.0L, qh1, ma, LambdaQCD) /*E*/;
     }
 
     return result;
 }
+// CollisionNum_ffchichi(T, mchi, Mu, gD, 3.0L, thetaD, ma, LambdaQCD) + /*u*/
+// CollisionNum_ffchichi(T, mchi, Mc, gD, 3.0L, thetaD, ma, LambdaQCD) + /*c*/
+// CollisionNum_ffchichi(T, mchi, Mt, gD, 3.0L, thetaD, ma, LambdaQCD) + /*t*/
+// CollisionNum_ffchichi(T, mchi, Md, gD, 3.0L, thetaD, ma, LambdaQCD) + /*d*/
+// CollisionNum_ffchichi(T, mchi, Ms, gD, 3.0L, thetaD, ma, LambdaQCD) + /*s*/
+// CollisionNum_ffchichi(T, mchi, Mb, gD, 3.0L, thetaD, ma, LambdaQCD) /*b*/;
+// CollisionNum_ffchichi(T, mchi, anom_mass, gD, 3.0L, thetaD, ma, LambdaQCD) /*U*/ 
+// CollisionNum_ffchichi(T, mchi, anom_mass, gD, 3.0L, thetaD, ma, LambdaQCD) /*D*/
 
 /*********************************************************/
 /* Thermally-averaged cross-section for portal freeze-in */
@@ -335,8 +338,8 @@ long double NumEq(long double T, long double m, int dof) {
 }
 
 //Thermally-averaged cross section
-long double SigmaV_chi(long double T, long double mchi, long double kappa, long double qhu, long double qhd, long double ma, long double anom_mass, long double LambdaQCD) {
-    return CollisionNum_chi(T, mchi, kappa, qhu, qhd, ma, anom_mass,LambdaQCD) /
+long double SigmaV_chi(long double T, long double mchi, long double gD, long double qh1, long double thetaD, long double ma, long double anom_mass, long double LambdaQCD) {
+    return CollisionNum_chi(T, mchi, gD, qh1, thetaD, ma, anom_mass,LambdaQCD) /
            pow(NumEq(T, mchi, 2), 2.0L);
 }
 
@@ -345,25 +348,25 @@ long double SigmaV_chi(long double T, long double mchi, long double kappa, long 
 /*****************************/
 
 //Portal Yield for Chi
-long double Yield_FreezeIn(long double mchi, long double kappa, long double qhu, long double qhd, long double ma, long double anom_mass, long double LambdaQCD, long double Trh) {
+long double Yield_FreezeIn(long double mchi, long double gD, long double qh1, long double thetaD, long double ma, long double anom_mass, long double LambdaQCD, long double Trh) {
 
     auto integrand_T = [=] (long double T) {
         return HoverHbarVisible(T) *
-               CollisionNum_chi(T, mchi, kappa, qhu, qhd, ma, anom_mass, LambdaQCD) /
+               CollisionNum_chi(T, mchi, gD, qh1, thetaD, ma, anom_mass, LambdaQCD) /
                (gstarS(T)*sqrt(gstar(T))*pow(T, 6.0L));
     };
     return (135.0L*sqrt(10.0L)*MPl/(2.0L*pow(M_PI, 3.0L))) *
            gauss<long double, 701>().integrate(integrand_T, 0.0L, Trh);
 }
 
-//Portal coupling, kappa, for freezing-in the required relic abundance
-long double kappa_FreezeIn(long double mchi, long double qhu, long double qhd, long double ma, long double anom_mass, long double LambdaQCD, long double Trh) {
+//Portal coupling, gD, for freezing-in the required relic abundance
+long double gD_FreezeIn(long double mchi, long double qh1, long double thetaD, long double ma, long double anom_mass, long double LambdaQCD, long double Trh) {
     if (Trh == 0.0L) {
         Trh = INFINITY;
     }
     return pow(
                 4.37e-10L /
-                (2.0L * mchi * Yield_FreezeIn(mchi, 1.0L, qhu, qhd, ma, anom_mass, LambdaQCD, Trh)), 0.25L
+                (2.0L * mchi * Yield_FreezeIn(mchi, 1.0L, qh1, thetaD, ma, anom_mass, LambdaQCD, Trh)), 0.25L
                );
 }
 
@@ -377,14 +380,13 @@ long double Muchie(long double mchi) {
 }
 
 //Direct detection cross section in squared-centimeter: \overline{\sigma}_e
-long double SigmaDDe(long double mchi, long double kappa, long double qhd, long double ma) {
+//Isolated ma << 1 limit
+long double SigmaDDe(long double mchi, long double gD, long double qh1, long double ma) {
 
-    long double Ve = 0.5L*kappa*qhd;
-    long double Ae = 0.5L*kappa*qhd;
-    long double Vc = 0.5L*kappa*1.0L;
-    long double Ac = 0.5L*kappa*1.0L;
+    long double Ae = 0.5L*gD*qh1;
+    long double Ac = 0.5L*gD*1.0L;
 
-    return (pow(Muchie(mchi),2.0L)/(M_PI*pow(alphaEM*alphaEM*Me*Me+ma*ma,2.0L)))*(Ae*Ae*Ac*Ac*(3.0L+2.0L*alphaEM*alphaEM*Me*Me/(ma*ma)+pow(alphaEM*Me/ma,4.0L))+Ve*Ve*Vc*Vc)*pow(GeVinvtocm, 2.0L);
+    return (pow(Muchie(mchi), 2.0L) * pow(Ae, 2.0L) * pow(Ac, 2.0L)) / (M_PI * pow(ma, 4.0L))*pow(GeVinvtocm, 2.0L);
 }
 
 #endif
