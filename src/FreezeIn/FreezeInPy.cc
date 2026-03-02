@@ -139,7 +139,7 @@ PYBIND11_MODULE(FreezeIn, mod)
     Hubble rate
     )pbdoc", py::arg("T"));
 
-    //SigmaV_chi(T, mchi, gD, qh1, thetaD, ma, anom_mass, LambdaQCD)
+    //SigmaV_chi(T, mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD)
     mod.def("SigmaV_chi", &SigmaV_chi, R"pbdoc(
     Inputs
     ------
@@ -148,7 +148,7 @@ PYBIND11_MODULE(FreezeIn, mod)
     mchi: mass of the dark matter in GeV
     gD: portal coupling
     qh1: lepton Higgs charge
-    thetaD: Z-X mixing that couples quarks
+    tb: ratio of Higgs vacuum expectation values (tan(beta))
     ma: dark photon mass
     anom_mass: anomalon mass scale. Set to 0 = no anomalons by default
     LambdaQCD: QCD confinement scale in GeV. Set to 0.15 GeV by default
@@ -157,16 +157,16 @@ PYBIND11_MODULE(FreezeIn, mod)
     -------
 
     Thermally-averaged cross section for SM SMbar -> chi chibar process
-    )pbdoc", py::arg("T"), py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("thetaD"), py::arg("ma"), py::arg("anom_mass")=0.0, py::arg("LambdaQCD")=0.15);
+    )pbdoc", py::arg("T"), py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("tb"), py::arg("ma"), py::arg("anom_mass")=0.0, py::arg("LambdaQCD")=0.15);
 
-    //gD_FreezeIn(mchi, qh1, thetaD, ma, anom_mass, LambdaQCD, Trh)
+    //gD_FreezeIn(mchi, qh1, tb, ma, anom_mass, LambdaQCD, Trh)
     mod.def("gD_FreezeIn", &gD_FreezeIn, R"pbdoc(
     Inputs
     ------
 
     mchi: mass of the dark matter in GeV
     qh1: lepton Higgs charge
-    thetaD: Z-X mixing that couples quarks
+    tb: ratio of Higgs vacuum expectation values (tan(beta))
     ma: mass of dark photon in GeV
     anom_mass: anomalon mass scale. Set to 0 = no anomalons by default
     LambdaQCD: QCD confinement scale in GeV. Set to 0.15 GeV by default
@@ -177,9 +177,9 @@ PYBIND11_MODULE(FreezeIn, mod)
 
     Portal coupling gD that reproduces the observed dark matter relic
     abundance for dark matter frozen-in via a light dark photon mediator
-    )pbdoc", py::arg("mchi"), py::arg("qh1"), py::arg("thetaD"), py::arg("ma"), py::arg("anom_mass")=0.0, py::arg("LambdaQCD")=0.15, py::arg("Trh")=0.0);
+    )pbdoc", py::arg("mchi"), py::arg("qh1"), py::arg("tb"), py::arg("ma"), py::arg("anom_mass")=0.0, py::arg("LambdaQCD")=0.15, py::arg("Trh")=0.0);
 
-    //SigmaDDe(mchi, gD)
+    //SigmaDDe(mchi, gD, qh1, tb, ma)
     mod.def("SigmaDDe", &SigmaDDe, R"pbdoc(
     Inputs
     ------
@@ -187,7 +187,7 @@ PYBIND11_MODULE(FreezeIn, mod)
     mchi: mass of the dark matter in GeV
     gD: portal coupling
     qh1: lepton Higgs charge
-    thetaD: Z-X mixing that couples quarks
+    tb: ratio of Higgs vacuum expectation values (tan(beta))
     ma: mass of dark photon
 
     Returns
@@ -195,7 +195,7 @@ PYBIND11_MODULE(FreezeIn, mod)
 
     Direct detection cross section (in cm^2) through the light dark photon
     mediator
-    )pbdoc", py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("ma"));
+    )pbdoc", py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("tb"), py::arg("ma"));
 
     
 };
