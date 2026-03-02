@@ -274,7 +274,7 @@ long double HoverHbarVisible(long double T) {
 long double M2_ffchichi(long double s, long double mchi, long double mf,long double gD, long double Nf, long double qH,long double ma) {
 
     //Axial (Af) piece of Aprime f f couplings
-    long double Af = 0.5L*gD*qH;
+    long double Af = 0.5L*gD*qH*(2.0L+pow(tb, 2))/(1.0L+pow(tb, 2));
 
     //Axial (Ac) piece of Aprime chi chi couplings
     long double Ac = 0.5L*gD*1.0L;
@@ -383,7 +383,7 @@ long double Muchie(long double mchi) {
 //Isolated ma << 1 limit
 long double SigmaDDe(long double mchi, long double gD, long double qh1, long double ma) {
 
-    long double Ae = 0.5L*gD*qh1;
+    long double Ae = 0.5L*gD*qh1*(2.0L+pow(tb, 2))/(1.0L+pow(tb, 2));
     long double Ac = 0.5L*gD*1.0L;
 
     return (pow(Muchie(mchi), 2.0L) * pow(Ae, 2.0L) * pow(Ac, 2.0L)) / (M_PI * pow(ma, 4.0L))*pow(GeVinvtocm, 2.0L);
