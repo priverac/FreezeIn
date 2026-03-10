@@ -305,26 +305,26 @@ long double CollisionNum_ffchichi(long double T, long double mchi,long double mf
 //qh1 for leptons.
 long double CollisionNum_chi(long double T, long double mchi, long double gD, long double qh1, long double tb, long double ma, long double anom_mass, long double LambdaQCD, long double thetaD) {
 
-    long double result = CollisionNum_ffchichi(T, mchi, Me, gD, 1.0L, qh1, tb, ma, LambdaQCD, thetaDl) + /*e*/
+    long double result = CollisionNum_ffchichi(T, mchi, Me, gD, 1.0L, qh1, tb, ma, LambdaQCD, (2.0L + pow(tb,2))/(1.0L + pow(tb,2))) + /*e*/
 
-                         CollisionNum_ffchichi(T, mchi, Mmu, gD, 1.0L, qh1, tb, ma, LambdaQCD, thetaDl) + /*mu*/
+                         CollisionNum_ffchichi(T, mchi, Mmu, gD, 1.0L, qh1, tb, ma, LambdaQCD, (2.0L + pow(tb,2))/(1.0L + pow(tb,2))) + /*mu*/
 
-                         CollisionNum_ffchichi(T, mchi, Mta, gD, 1.0L, qh1, tb, ma, LambdaQCD, thetaDl) + /*ta*/
+                         CollisionNum_ffchichi(T, mchi, Mta, gD, 1.0L, qh1, tb, ma, LambdaQCD, (2.0L + pow(tb,2))/(1.0L + pow(tb,2))) + /*ta*/
 
-                         CollisionNum_ffchichi(T, mchi, Mu, gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaDq) + /*u*/
+                         CollisionNum_ffchichi(T, mchi, Mu, gD, 3.0L, qh1, tb, ma, LambdaQCD, (1.0L)/(1.0L + pow(tb,2))) + /*u*/
                          
-                         CollisionNum_ffchichi(T, mchi, Mu, gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaDq) + /*c*/
+                         CollisionNum_ffchichi(T, mchi, Mu, gD, 3.0L, qh1, tb, ma, LambdaQCD, (1.0L)/(1.0L + pow(tb,2))) + /*c*/
                          
-                         CollisionNum_ffchichi(T, mchi, Mu, gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaDq) + /*t*/
+                         CollisionNum_ffchichi(T, mchi, Mu, gD, 3.0L, qh1, tb, ma, LambdaQCD, (1.0L)/(1.0L + pow(tb,2))) + /*t*/
                          
-                         CollisionNum_ffchichi(T, mchi, Mu, gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaDq) + /*d*/
+                         CollisionNum_ffchichi(T, mchi, Mu, gD, 3.0L, qh1, tb, ma, LambdaQCD, (1.0L)/(1.0L + pow(tb,2))) + /*d*/
                          
-                         CollisionNum_ffchichi(T, mchi, Mu, gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaDq) + /*s*/
+                         CollisionNum_ffchichi(T, mchi, Mu, gD, 3.0L, qh1, tb, ma, LambdaQCD, (1.0L)/(1.0L + pow(tb,2))) + /*s*/
                          
-                         CollisionNum_ffchichi(T, mchi, Mu, gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaDq) /*b*/;
+                         CollisionNum_ffchichi(T, mchi, Mu, gD, 3.0L, qh1, tb, ma, LambdaQCD, (1.0L)/(1.0L + pow(tb,2))) /*b*/;
 
     if (anom_mass != 0.0) {
-        result = result  + CollisionNum_ffchichi(T, mchi, anom_mass, gD, 1.0L, qh1, tb, ma, LambdaQCD, thetaD) /*E*/;
+        result = result  + CollisionNum_ffchichi(T, mchi, anom_mass, gD, 1.0L, qh1, tb, ma, LambdaQCD, (2.0L + pow(tb,2))/(1.0L + pow(tb,2))) /*E*/;
     }
 
     return result;
