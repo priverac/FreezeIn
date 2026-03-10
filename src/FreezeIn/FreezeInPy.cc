@@ -139,7 +139,7 @@ PYBIND11_MODULE(FreezeIn, mod)
     Hubble rate
     )pbdoc", py::arg("T"));
 
-    //SigmaV_chi(T, mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD)
+    //SigmaV_chi(T, mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD, thetaD)
     mod.def("SigmaV_chi", &SigmaV_chi, R"pbdoc(
     Inputs
     ------
@@ -152,14 +152,15 @@ PYBIND11_MODULE(FreezeIn, mod)
     ma: dark photon mass
     anom_mass: anomalon mass scale. Set to 0 = no anomalons by default
     LambdaQCD: QCD confinement scale in GeV. Set to 0.15 GeV by default
+    thetaD: coupling parameter for theta_D
 
     Returns
     -------
 
     Thermally-averaged cross section for SM SMbar -> chi chibar process
-    )pbdoc", py::arg("T"), py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("tb"), py::arg("ma"), py::arg("anom_mass")=0.0, py::arg("LambdaQCD")=0.15);
+    )pbdoc", py::arg("T"), py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("tb"), py::arg("ma"), py::arg("anom_mass")=0.0, py::arg("LambdaQCD")=0.15, py::arg("thetaD"));
 
-    //gD_FreezeIn(mchi, qh1, tb, ma, anom_mass, LambdaQCD, Trh)
+    //gD_FreezeIn(mchi, qh1, tb, ma, anom_mass, LambdaQCD, Trh, thetaD)
     mod.def("gD_FreezeIn", &gD_FreezeIn, R"pbdoc(
     Inputs
     ------
@@ -171,13 +172,14 @@ PYBIND11_MODULE(FreezeIn, mod)
     anom_mass: anomalon mass scale. Set to 0 = no anomalons by default
     LambdaQCD: QCD confinement scale in GeV. Set to 0.15 GeV by default
     Trh: instantaneous reheating temperature. Setting to 0.0 will set it to infinity
+    thetaD: coupling parameter for theta_D
 
     Returns
     -------
 
     Portal coupling gD that reproduces the observed dark matter relic
     abundance for dark matter frozen-in via a light dark photon mediator
-    )pbdoc", py::arg("mchi"), py::arg("qh1"), py::arg("tb"), py::arg("ma"), py::arg("anom_mass")=0.0, py::arg("LambdaQCD")=0.15, py::arg("Trh")=0.0);
+    )pbdoc", py::arg("mchi"), py::arg("qh1"), py::arg("tb"), py::arg("ma"), py::arg("anom_mass")=0.0, py::arg("LambdaQCD")=0.15, py::arg("Trh")=0.0, py::arg("thetaD"));
 
     //SigmaDDe(mchi, gD, qh1, tb, ma)
     mod.def("SigmaDDe", &SigmaDDe, R"pbdoc(
