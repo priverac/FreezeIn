@@ -181,6 +181,28 @@ PYBIND11_MODULE(FreezeIn, mod)
     abundance for dark matter frozen-in via a light dark photon mediator
     )pbdoc", py::arg("mchi"), py::arg("qh1"), py::arg("tb"), py::arg("ma"), py::arg("anom_mass")=0.0, py::arg("LambdaQCD")=0.15, py::arg("Trh")=0.0, py::arg("thetaD"));
 
+    //Yield_FreezeIn(mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD, Trh, thetaD)
+    mod.def("Yield_FreezeIn", &Yield_FreezeIn, R"pbdoc(
+    Inputs
+    ------
+
+    mchi: mass of the dark matter in GeV
+    gD: portal coupling
+    qh1: lepton Higgs charge
+    tb: ratio of Higgs vacuum expectation values (tan(beta))
+    ma: mass of dark photon in GeV
+    anom_mass: anomalon mass scale.
+    LambdaQCD: QCD confinement scale in GeV. Set to 0.15 GeV by default
+    Trh: instantaneous reheating temperature. Setting to 0.0 will set it to infinity
+    thetaD: coupling parameter for theta_D
+
+    Returns
+    -------
+
+    Portal yield for freeze-in dark matter as a function of temperature
+
+    )pbdoc", py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("tb"), py::arg("ma"), py::arg("anom_mass"), py::arg("LambdaQCD")=0.15, py::arg("Trh")=0.0, py::arg("thetaD"));
+
     //SigmaDDe(mchi, gD, qh1, tb, ma)
     mod.def("SigmaDDe", &SigmaDDe, R"pbdoc(
     Inputs
