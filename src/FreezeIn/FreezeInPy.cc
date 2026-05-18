@@ -219,7 +219,7 @@ PYBIND11_MODULE(FreezeIn, mod)
 
     Direct detection cross section (in cm^2) through the light dark photon
     mediator
-    )pbdoc", py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("tb"), py::arg("ma"));
+    )pbdoc", py::arg("mchi"), py::arg("qh1"), py::arg("tb"), py::arg("vD"));
 
     
 };

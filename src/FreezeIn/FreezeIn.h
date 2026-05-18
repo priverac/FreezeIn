@@ -19,6 +19,7 @@
 #include <boost/math/special_functions/bessel.hpp>/*provides bessel-K function*/
 #include <boost/math/quadrature/gauss.hpp>/*provides Gauss-Legendre quadrature*/
 #include <boost/math/quadrature/exp_sinh.hpp>/*provides exp_sinh quadrature*/
+#include <boost/math/quadrature/tanh_sinh.hpp>/*provides exp_sinh quadrature*/
 
 //Namespaces
 using namespace std;
@@ -296,7 +297,7 @@ long double CollisionNum_ffchichi(long double T, long double mchi,long double mf
         };
         
         return (T/(pow(8.0L*M_PI, 2)*pow(2.0L*M_PI, 3))) *
-               exp_sinh<long double>().integrate(integrand_s, max(4.0L*mf*mf, 4.0L*mchi*mchi), INFINITY);
+               tanh_sinh<long double>().integrate(integrand_s, max(4.0L*mf*mf, 4.0L*mchi*mchi), INFINITY);
     }
     else { return 0.0L; }
 }
@@ -385,12 +386,12 @@ long double Muchie(long double mchi) {
 
 //Direct detection cross section in squared-centimeter: \overline{\sigma}_e
 //Isolated ma << 1 limit
-long double SigmaDDe(long double mchi, long double gD, long double qh1, long double tb, long double ma) {
+long double SigmaDDe(long double mchi, long double qh1, long double tb, long double vD) {
 
-    long double Ae = 0.5L*gD*qh1*(2.0L+pow(tb, 2))/(1.0L+pow(tb, 2));
-    long double Ac = 0.5L*gD*1.0L;
+    long double Ae = 0.5L*qh1*(2.0L+pow(tb, 2))/(1.0L+pow(tb, 2));
+    long double Ac = 0.5L;
 
-    return (pow(Muchie(mchi), 2.0L) * pow(Ae, 2.0L) * pow(Ac, 2.0L)) / (M_PI * pow(ma, 4.0L))*pow(GeVinvtocm, 2.0L);
+    return (2 * pow(Muchie(mchi), 2.0L) * pow(Ae, 2.0L) * pow(Ac, 2.0L)) / (M_PI * pow(vD, 4.0L))*pow(GeVinvtocm, 2.0L);
 }
 
 #endif
