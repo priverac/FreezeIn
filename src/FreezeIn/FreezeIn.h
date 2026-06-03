@@ -385,6 +385,20 @@ long double gD_FreezeIn(long double mchi, long double qh1, long double tb, long 
                );
 }
 
+//Running yield: integrate the freeze-in integrand from Tlow up to Thigh
+long double Yield_FreezeIn_partial(long double mchi, long double gD, long double qh1, long double tb, long double ma, long double anom_mass, long double LambdaQCD, long double Tlow, long double Thigh, long double thetaD) {
+
+    auto integrand_T = [=] (long double T) {
+        return HoverHbarVisible(T) *
+               CollisionNum_chi(T, mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD, thetaD) /
+               (gstarS(T)*sqrt(gstar(T))*pow(T, 6.0L));
+    };
+    return (135.0L*sqrt(10.0L)*MPl/(2.0L*pow(M_PI, 3.0L))) *
+           gauss<long double, 701>().integrate(integrand_T, Tlow, Thigh);
+}
+
+
+
 /**********************************/
 /* Direct detection cross section */
 /**********************************/

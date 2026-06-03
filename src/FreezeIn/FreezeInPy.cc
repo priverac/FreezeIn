@@ -208,6 +208,11 @@ PYBIND11_MODULE(FreezeIn, mod)
 
     )pbdoc", py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("tb"), py::arg("ma"), py::arg("anom_mass"), py::arg("LambdaQCD")=0.15, py::arg("Trh")=0.0, py::arg("thetaD"));
 
+    mod.def("Yield_FreezeIn_partial", &Yield_FreezeIn_partial,
+        py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("tb"), py::arg("ma"),
+        py::arg("anom_mass"), py::arg("LambdaQCD"),
+        py::arg("Tlow"), py::arg("Thigh"), py::arg("thetaD"));
+
     //SigmaDDe(mchi, gD, qh1, tb, ma)
     mod.def("SigmaDDe", &SigmaDDe, R"pbdoc(
     Inputs
