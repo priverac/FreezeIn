@@ -20,7 +20,7 @@
 #include <boost/math/special_functions/bessel.hpp>/*provides bessel-K function*/
 #include <boost/math/quadrature/gauss.hpp>/*provides Gauss-Legendre quadrature*/
 #include <boost/math/quadrature/exp_sinh.hpp>/*provides exp_sinh quadrature*/
-#include <boost/math/quadrature/tanh_sinh.hpp>/*provides exp_sinh quadrature*/
+#include <boost/math/quadrature/tanh_sinh.hpp>/*provides tanh_sinh quadrature*/
 
 //Namespaces
 using namespace std;
@@ -298,7 +298,7 @@ long double CollisionNum_ffchichi(long double T, long double mchi,long double mf
         };
         
         return (T/(pow(8.0L*M_PI, 2)*pow(2.0L*M_PI, 3))) *
-               tanh_sinh<long double>().integrate(integrand_s, max(4.0L*mf*mf, 4.0L*mchi*mchi), INFINITY);
+               exp_sinh<long double>().integrate(integrand_s, max(4.0L*mf*mf, 4.0L*mchi*mchi), INFINITY);
     }
     else { return 0.0L; }
 }
