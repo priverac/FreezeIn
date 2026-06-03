@@ -14,6 +14,7 @@
 #include <vector>/*provides std::vector*/
 #include <sstream>/*provides istringstream*/
 #include <stdexcept>/*provides runtime_error*/
+#include <map>/*provides std::map*/
 
 //Boost C++ library
 #include <boost/math/special_functions/bessel.hpp>/*provides bessel-K function*/
@@ -302,31 +303,40 @@ long double CollisionNum_ffchichi(long double T, long double mchi,long double mf
     else { return 0.0L; }
 }
 
+//Individual number-density collision terms for each fermion species.
+//Returns a name->value map so each CollisionNum_ffchichi output is accessible.
+map<string, long double> CollisionNum_chi_individual(long double T, long double mchi, long double gD, long double qh1, long double tb, long double ma, long double anom_mass, long double LambdaQCD, long double thetaD) {
+
+    long double thetaL = (2.0L + pow(tb,2))/(1.0L + pow(tb,2)); /*leptons*/
+    long double thetaQ = (1.0L)/(1.0L + pow(tb,2));             /*quarks*/
+
+    map<string, long double> contribs;
+
+    contribs["e"]  = CollisionNum_ffchichi(T, mchi, Me,  gD, 1.0L, qh1, tb, ma, LambdaQCD, thetaL);
+    contribs["mu"] = CollisionNum_ffchichi(T, mchi, Mmu, gD, 1.0L, qh1, tb, ma, LambdaQCD, thetaL);
+    contribs["ta"] = CollisionNum_ffchichi(T, mchi, Mta, gD, 1.0L, qh1, tb, ma, LambdaQCD, thetaL);
+    contribs["u"]  = CollisionNum_ffchichi(T, mchi, Mu,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
+    contribs["c"]  = CollisionNum_ffchichi(T, mchi, Mc,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
+    contribs["t"]  = CollisionNum_ffchichi(T, mchi, Mt,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
+    contribs["d"]  = CollisionNum_ffchichi(T, mchi, Md,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
+    contribs["s"]  = CollisionNum_ffchichi(T, mchi, Ms,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
+    contribs["b"]  = CollisionNum_ffchichi(T, mchi, Mb,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
+
+    if (anom_mass != 0.0L) {
+        contribs["E"] = CollisionNum_ffchichi(T, mchi, anom_mass, gD, 1.0L, qh1, tb, ma, LambdaQCD, thetaL);
+    }
+
+    return contribs;
+}
+
 //Sum of all number-density collision terms for portal freeze-in
 //qh1 for leptons.
 long double CollisionNum_chi(long double T, long double mchi, long double gD, long double qh1, long double tb, long double ma, long double anom_mass, long double LambdaQCD, long double thetaD) {
 
-    long double result = CollisionNum_ffchichi(T, mchi, Me, gD, 1.0L, qh1, tb, ma, LambdaQCD, (2.0L + pow(tb,2))/(1.0L + pow(tb,2))); /*e*/
+    map<string, long double> contribs = CollisionNum_chi_individual(T, mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD, thetaD);
 
-                         //CollisionNum_ffchichi(T, mchi, Mmu, gD, 1.0L, qh1, tb, ma, LambdaQCD, (2.0L + pow(tb,2))/(1.0L + pow(tb,2))) + /*mu*/
-
-                         //CollisionNum_ffchichi(T, mchi, Mta, gD, 1.0L, qh1, tb, ma, LambdaQCD, (2.0L + pow(tb,2))/(1.0L + pow(tb,2))) + /*ta*/
-
-                         //CollisionNum_ffchichi(T, mchi, Mu, gD, 3.0L, qh1, tb, ma, LambdaQCD, (1.0L)/(1.0L + pow(tb,2))) + /*u*/
-                         
-                         //CollisionNum_ffchichi(T, mchi, Mc, gD, 3.0L, qh1, tb, ma, LambdaQCD, (1.0L)/(1.0L + pow(tb,2))) + /*c*/
-                         
-                         //CollisionNum_ffchichi(T, mchi, Mt, gD, 3.0L, qh1, tb, ma, LambdaQCD, (1.0L)/(1.0L + pow(tb,2))) + /*t*/
-                         
-                         //CollisionNum_ffchichi(T, mchi, Md, gD, 3.0L, qh1, tb, ma, LambdaQCD, (1.0L)/(1.0L + pow(tb,2))) + /*d*/
-                         
-                         //CollisionNum_ffchichi(T, mchi, Ms, gD, 3.0L, qh1, tb, ma, LambdaQCD, (1.0L)/(1.0L + pow(tb,2))) + /*s*/
-                         
-                         //CollisionNum_ffchichi(T, mchi, Mb, gD, 3.0L, qh1, tb, ma, LambdaQCD, (1.0L)/(1.0L + pow(tb,2))); /*b*/
-
-    if (anom_mass != 0.0) {
-        result = result + CollisionNum_ffchichi(T, mchi, anom_mass, gD, 1.0L, qh1, tb, ma, LambdaQCD, (2.0L + pow(tb,2))/(1.0L + pow(tb,2))); /*E*/
-    }
+    long double result = 0.0L;
+    for (const auto& kv : contribs) result += kv.second;
 
     return result;
 }

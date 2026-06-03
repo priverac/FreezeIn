@@ -139,6 +139,11 @@ PYBIND11_MODULE(FreezeIn, mod)
     Hubble rate
     )pbdoc", py::arg("T"));
 
+    mod.def("CollisionNum_chi_individual", &CollisionNum_chi_individual,
+        py::arg("T"), py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("tb"),
+        py::arg("ma"), py::arg("anom_mass")=0.0, py::arg("LambdaQCD")=0.15, py::arg("thetaD"));
+
+
     //SigmaV_chi(T, mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD, thetaD)
     mod.def("SigmaV_chi", &SigmaV_chi, R"pbdoc(
     Inputs
