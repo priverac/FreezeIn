@@ -380,8 +380,8 @@ long double vD_FreezeIn(long double mchi, long double qh1, long double tb, long 
         Trh = INFINITY;
     }
     return pow(
-                4.37e-10L /
-                (2.0L * mchi * Yield_FreezeIn(mchi, 1.0L, qh1, tb, anom_mass, LambdaQCD, Trh)), 0.25L
+                (2.0L * mchi * Yield_FreezeIn(mchi, 1.0L, qh1, tb, anom_mass, LambdaQCD, Trh)) /
+                4.37e-10L, 0.25L
                );
 }
 
