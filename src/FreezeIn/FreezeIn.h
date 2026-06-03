@@ -313,14 +313,14 @@ map<string, long double> CollisionNum_chi_individual(long double T, long double 
     map<string, long double> contribs;
 
     contribs["e"]  = CollisionNum_ffchichi(T, mchi, Me,  gD, 1.0L, qh1, tb, ma, LambdaQCD, thetaL);
-    contribs["mu"] = CollisionNum_ffchichi(T, mchi, Mmu, gD, 1.0L, qh1, tb, ma, LambdaQCD, thetaL);
-    contribs["ta"] = CollisionNum_ffchichi(T, mchi, Mta, gD, 1.0L, qh1, tb, ma, LambdaQCD, thetaL);
-    contribs["u"]  = CollisionNum_ffchichi(T, mchi, Mu,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
-    contribs["c"]  = CollisionNum_ffchichi(T, mchi, Mc,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
-    contribs["t"]  = CollisionNum_ffchichi(T, mchi, Mt,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
-    contribs["d"]  = CollisionNum_ffchichi(T, mchi, Md,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
-    contribs["s"]  = CollisionNum_ffchichi(T, mchi, Ms,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
-    contribs["b"]  = CollisionNum_ffchichi(T, mchi, Mb,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
+    // contribs["mu"] = CollisionNum_ffchichi(T, mchi, Mmu, gD, 1.0L, qh1, tb, ma, LambdaQCD, thetaL);
+    // contribs["ta"] = CollisionNum_ffchichi(T, mchi, Mta, gD, 1.0L, qh1, tb, ma, LambdaQCD, thetaL);
+    // contribs["u"]  = CollisionNum_ffchichi(T, mchi, Mu,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
+    // contribs["c"]  = CollisionNum_ffchichi(T, mchi, Mc,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
+    // contribs["t"]  = CollisionNum_ffchichi(T, mchi, Mt,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
+    // contribs["d"]  = CollisionNum_ffchichi(T, mchi, Md,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
+    // contribs["s"]  = CollisionNum_ffchichi(T, mchi, Ms,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
+    // contribs["b"]  = CollisionNum_ffchichi(T, mchi, Mb,  gD, 3.0L, qh1, tb, ma, LambdaQCD, thetaQ);
 
     if (anom_mass != 0.0L) {
         contribs["E"] = CollisionNum_ffchichi(T, mchi, anom_mass, gD, 1.0L, qh1, tb, ma, LambdaQCD, thetaL);
