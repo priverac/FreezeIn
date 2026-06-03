@@ -274,13 +274,13 @@ long double HoverHbarVisible(long double T) {
 
 //Fully averaged matrix element squared for f f -> Aprime -> chi chi
 long double M2_ffchichi(long double s, long double mchi, long double mf,long double gD, long double Nf, long double qH,long double tb,long double ma, long double thetaD) {
-
+ 
     //Axial (Af) piece of Aprime f f couplings
     long double Af = 0.5L*gD*qH*thetaD;
-
+ 
     //Axial (Ac) piece of Aprime chi chi couplings
     long double Ac = 0.5L*gD*1.0L;
-
+ 
     return (16.0L * pow(Af, 2) * pow(Ac, 2) * pow(mf, 2) * pow(mchi, 2)) / pow(ma, 4);
 }
 
@@ -290,9 +290,9 @@ long double M2_ffchichi(long double s, long double mchi, long double mf,long dou
 
 //Number-density collision term for f f -> Aprime/Z -> Chi Chi
 long double CollisionNum_ffchichi(long double T, long double mchi,long double mf, long double gD,long double Nf, long double qH,long double tb, long double ma, long double LambdaQCD, long double thetaD) {
-
+ 
     if ( ( Nf == 1.0L ) || ( (Nf == 3.0L) && (T > LambdaQCD) ) ) {
-
+ 
         auto integrand_s = [=] (long double s) {
             return M2_ffchichi(s, mchi, mf, gD, Nf, qH, tb, ma, thetaD) * sqrt(1.0L - 4.0L*mchi*mchi/s) * sqrt(1.0L - 4.0L*mf*mf/s) * sqrt(s) * boost::math::cyl_bessel_k(1, sqrt(s)/T);
         };
@@ -305,7 +305,7 @@ long double CollisionNum_ffchichi(long double T, long double mchi,long double mf
 
 //Individual number-density collision terms for each fermion species.
 //Returns a name->value map so each CollisionNum_ffchichi output is accessible.
-map<string, long double> CollisionNum_chi_individual(long double T, long double mchi, long double gD, long double qh1, long double tb, long double ma, long double anom_mass, long double LambdaQCD, long double thetaD) {
+map<string, long double> CollisionNum_chi_individual(long double T, long double mchi, long double gD, long double qh1, long double tb, long double ma, long double anom_mass, long double LambdaQCD) {
 
     long double thetaL = (2.0L + pow(tb,2))/(1.0L + pow(tb,2)); /*leptons*/
     long double thetaQ = (1.0L)/(1.0L + pow(tb,2));             /*quarks*/
@@ -331,13 +331,13 @@ map<string, long double> CollisionNum_chi_individual(long double T, long double 
 
 //Sum of all number-density collision terms for portal freeze-in
 //qh1 for leptons.
-long double CollisionNum_chi(long double T, long double mchi, long double gD, long double qh1, long double tb, long double ma, long double anom_mass, long double LambdaQCD, long double thetaD) {
-
-    map<string, long double> contribs = CollisionNum_chi_individual(T, mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD, thetaD);
-
+long double CollisionNum_chi(long double T, long double mchi, long double gD, long double qh1, long double tb, long double ma, long double anom_mass, long double LambdaQCD) {
+ 
+    map<string, long double> contribs = CollisionNum_chi_individual(T, mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD);
+ 
     long double result = 0.0L;
     for (const auto& kv : contribs) result += kv.second;
-
+ 
     return result;
 }
 
@@ -347,14 +347,14 @@ long double CollisionNum_chi(long double T, long double mchi, long double gD, lo
 
 //Equilibrium number density for Chi
 long double NumEq(long double T, long double m, int dof) {
-
+ 
     return (dof/(2.0L*M_PI*M_PI))*T*m*m*boost::math::cyl_bessel_k(2, m/T);
-
+ 
 }
-
+ 
 //Thermally-averaged cross section
-long double SigmaV_chi(long double T, long double mchi, long double gD, long double qh1, long double tb, long double ma, long double anom_mass, long double LambdaQCD, long double thetaD) {
-    return CollisionNum_chi(T, mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD, thetaD) /
+long double SigmaV_chi(long double T, long double mchi, long double gD, long double qh1, long double tb, long double ma, long double anom_mass, long double LambdaQCD) {
+    return CollisionNum_chi(T, mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD) /
            pow(NumEq(T, mchi, 2), 2.0L);
 }
 
@@ -363,11 +363,11 @@ long double SigmaV_chi(long double T, long double mchi, long double gD, long dou
 /*****************************/
 
 //Portal Yield for Chi
-long double Yield_FreezeIn(long double mchi, long double gD, long double qh1, long double tb, long double ma, long double anom_mass, long double LambdaQCD, long double Trh, long double thetaD) {
+long double Yield_FreezeIn(long double mchi, long double gD, long double qh1, long double tb, long double ma, long double anom_mass, long double LambdaQCD, long double Trh) {
 
     auto integrand_T = [=] (long double T) {
         return HoverHbarVisible(T) *
-               CollisionNum_chi(T, mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD, thetaD) /
+               CollisionNum_chi(T, mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD) /
                (gstarS(T)*sqrt(gstar(T))*pow(T, 6.0L));
     };
     return (135.0L*sqrt(10.0L)*MPl/(2.0L*pow(M_PI, 3.0L))) *
@@ -375,22 +375,22 @@ long double Yield_FreezeIn(long double mchi, long double gD, long double qh1, lo
 }
 
 //Portal coupling, gD, for freezing-in the required relic abundance
-long double gD_FreezeIn(long double mchi, long double qh1, long double tb, long double ma, long double anom_mass, long double LambdaQCD, long double Trh, long double thetaD) {
+long double gD_FreezeIn(long double mchi, long double qh1, long double tb, long double ma, long double anom_mass, long double LambdaQCD, long double Trh) {
     if (Trh == 0.0L) {
         Trh = INFINITY;
     }
     return pow(
                 4.37e-10L /
-                (2.0L * mchi * Yield_FreezeIn(mchi, 1.0L, qh1, tb, ma, anom_mass, LambdaQCD, Trh, thetaD)), 0.25L
+                (2.0L * mchi * Yield_FreezeIn(mchi, 1.0L, qh1, tb, ma, anom_mass, LambdaQCD, Trh)), 0.25L
                );
 }
 
 //Running yield: integrate the freeze-in integrand from Tlow up to Thigh
-long double Yield_FreezeIn_partial(long double mchi, long double gD, long double qh1, long double tb, long double ma, long double anom_mass, long double LambdaQCD, long double Tlow, long double Thigh, long double thetaD) {
-
+long double Yield_FreezeIn_partial(long double mchi, long double gD, long double qh1, long double tb, long double ma, long double anom_mass, long double LambdaQCD, long double Tlow, long double Thigh) {
+ 
     auto integrand_T = [=] (long double T) {
         return HoverHbarVisible(T) *
-               CollisionNum_chi(T, mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD, thetaD) /
+               CollisionNum_chi(T, mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD) /
                (gstarS(T)*sqrt(gstar(T))*pow(T, 6.0L));
     };
     return (135.0L*sqrt(10.0L)*MPl/(2.0L*pow(M_PI, 3.0L))) *
@@ -407,14 +407,14 @@ long double Yield_FreezeIn_partial(long double mchi, long double gD, long double
 long double Muchie(long double mchi) {
     return mchi*Me/(mchi + Me);
 }
-
+ 
 //Direct detection cross section in squared-centimeter: \overline{\sigma}_e
 //Isolated ma << 1 limit
 long double SigmaDDe(long double mchi, long double qh1, long double tb, long double vD) {
-
+ 
     long double Ae = 0.5L*qh1*(2.0L+pow(tb, 2))/(1.0L+pow(tb, 2));
     long double Ac = 0.5L;
-
+ 
     return (2 * pow(Muchie(mchi), 2.0L) * pow(Ae, 2.0L) * pow(Ac, 2.0L)) / (M_PI * pow(vD, 4.0L))*pow(GeVinvtocm, 2.0L);
 }
 
