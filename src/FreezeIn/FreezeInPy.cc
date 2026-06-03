@@ -140,8 +140,7 @@ PYBIND11_MODULE(FreezeIn, mod)
     )pbdoc", py::arg("T"));
 
     mod.def("CollisionNum_chi_individual", &CollisionNum_chi_individual,
-        py::arg("T"), py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("tb"),
-        py::arg("ma"), py::arg("anom_mass"), py::arg("LambdaQCD"));
+        py::arg("T"), py::arg("mchi"), py::arg("vD"), py::arg("qh1"), py::arg("tb"), py::arg("anom_mass"), py::arg("LambdaQCD"));
 
 
     //SigmaV_chi(T, mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD, thetaD)
@@ -163,10 +162,10 @@ PYBIND11_MODULE(FreezeIn, mod)
     -------
 
     Thermally-averaged cross section for SM SMbar -> chi chibar process
-    )pbdoc", py::arg("T"), py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("tb"), py::arg("ma"), py::arg("anom_mass"), py::arg("LambdaQCD"));
+    )pbdoc", py::arg("T"), py::arg("mchi"), py::arg("vD"), py::arg("qh1"), py::arg("tb"), py::arg("anom_mass"), py::arg("LambdaQCD"));
 
-    //gD_FreezeIn(mchi, qh1, tb, ma, anom_mass, LambdaQCD, Trh, thetaD)
-    mod.def("gD_FreezeIn", &gD_FreezeIn, R"pbdoc(
+    //vD_FreezeIn(mchi, qh1, tb, ma, anom_mass, LambdaQCD, Trh, thetaD)
+    mod.def("vD_FreezeIn", &vD_FreezeIn, R"pbdoc(
     Inputs
     ------
 
@@ -184,7 +183,7 @@ PYBIND11_MODULE(FreezeIn, mod)
 
     Portal coupling gD that reproduces the observed dark matter relic
     abundance for dark matter frozen-in via a light dark photon mediator
-    )pbdoc", py::arg("mchi"), py::arg("qh1"), py::arg("tb"), py::arg("ma"), py::arg("anom_mass"), py::arg("LambdaQCD"), py::arg("Trh"));
+    )pbdoc", py::arg("mchi"), py::arg("qh1"), py::arg("tb"), py::arg("anom_mass"), py::arg("LambdaQCD"), py::arg("Trh"));
 
     //Yield_FreezeIn(mchi, gD, qh1, tb, ma, anom_mass, LambdaQCD, Trh, thetaD)
     mod.def("Yield_FreezeIn", &Yield_FreezeIn, R"pbdoc(
@@ -206,10 +205,10 @@ PYBIND11_MODULE(FreezeIn, mod)
 
     Portal yield for freeze-in dark matter as a function of temperature
 
-    )pbdoc", py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("tb"), py::arg("ma"), py::arg("anom_mass"), py::arg("LambdaQCD"), py::arg("Trh"));
+    )pbdoc", py::arg("mchi"), py::arg("vD"), py::arg("qh1"), py::arg("tb"), py::arg("anom_mass"), py::arg("LambdaQCD"), py::arg("Trh"));
 
     mod.def("Yield_FreezeIn_partial", &Yield_FreezeIn_partial,
-        py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("tb"), py::arg("ma"),
+        py::arg("mchi"), py::arg("vD"), py::arg("qh1"), py::arg("tb"),
         py::arg("anom_mass"), py::arg("LambdaQCD"),
         py::arg("Tlow"), py::arg("Thigh"));
 
@@ -229,7 +228,7 @@ PYBIND11_MODULE(FreezeIn, mod)
 
     Direct detection cross section (in cm^2) through the light dark photon
     mediator
-    )pbdoc", py::arg("mchi"), py::arg("qh1"), py::arg("tb"), py::arg("vD"));
+    )pbdoc", py::arg("mchi"), py::arg("vD"), py::arg("qh1"), py::arg("tb"));
 
     
 };
