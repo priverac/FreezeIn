@@ -231,4 +231,75 @@ PYBIND11_MODULE(FreezeIn, mod)
     )pbdoc", py::arg("mchi"), py::arg("vD"), py::arg("qh1"), py::arg("tb"));
 
     
+    /**********************************************************/
+    /* Vector-Vector (VV) case: e+ e- -> Aprime -> chi chi    */
+    /**********************************************************/
+ 
+    //CollisionNum_chi_VV(T, mchi, gD)
+    mod.def("CollisionNum_chi_VV", &CollisionNum_chi_VV, R"pbdoc(
+    Inputs
+    ------
+ 
+    T: Temperature in the visible sector in GeV
+    mchi: mass of the dark matter in GeV
+    gD: portal coupling
+ 
+    Returns
+    -------
+ 
+    Number-density collision term for e+ e- -> chi chibar in the
+    Vector-Vector case (electron channel only)
+    )pbdoc", py::arg("T"), py::arg("mchi"), py::arg("gD"));
+ 
+    //Yield_FreezeIn_VV(mchi, gD, Trh)
+    mod.def("Yield_FreezeIn_VV", &Yield_FreezeIn_VV, R"pbdoc(
+    Inputs
+    ------
+ 
+    mchi: mass of the dark matter in GeV
+    gD: portal coupling
+    Trh: instantaneous reheating temperature. Setting to 0.0 will NOT be
+         remapped here; pass the desired upper limit explicitly
+ 
+    Returns
+    -------
+ 
+    Portal yield for freeze-in dark matter in the Vector-Vector case
+    (electron channel only), integrated from T = 0 up to Trh
+    )pbdoc", py::arg("mchi"), py::arg("gD"), py::arg("Trh"));
+ 
+    //Yield_FreezeIn_partial_VV(mchi, gD, Tlow, Thigh)
+    mod.def("Yield_FreezeIn_partial_VV", &Yield_FreezeIn_partial_VV, R"pbdoc(
+    Inputs
+    ------
+ 
+    mchi: mass of the dark matter in GeV
+    gD: portal coupling
+    Tlow: lower limit of the temperature integral in GeV
+    Thigh: upper limit of the temperature integral in GeV
+ 
+    Returns
+    -------
+ 
+    Running (cumulative) portal yield in the Vector-Vector case
+    (electron channel only), integrated from Tlow up to Thigh
+    )pbdoc", py::arg("mchi"), py::arg("gD"),
+             py::arg("Tlow"), py::arg("Thigh"));
+ 
+    //gD_FreezeIn(mchi, Trh)
+    mod.def("gD_FreezeIn", &gD_FreezeIn, R"pbdoc(
+    Inputs
+    ------
+ 
+    mchi: mass of the dark matter in GeV
+    Trh: instantaneous reheating temperature. Setting to 0.0 will set it
+         to infinity
+ 
+    Returns
+    -------
+ 
+    Portal coupling gD that reproduces the observed dark matter relic
+    abundance in the Vector-Vector case (electron channel only)
+    )pbdoc", py::arg("mchi"), py::arg("Trh"));
+ 
 };
