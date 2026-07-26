@@ -418,65 +418,84 @@ long double SigmaDDe(long double mchi, long double vD, long double qh1, long dou
     return (2 * pow(Muchie(mchi), 2.0L) * pow(Ae, 2.0L) * pow(Ac, 2.0L)) / (M_PI * pow(vD, 4.0L))*pow(GeVinvtocm, 2.0L);
 }
 
-/*************************************************************/
-/* Vector-Vector (VV) case: e+ e- -> Aprime -> chi chi       */
-/* Electron channel only.                                    */
-/*                                                           */
-/* All thermodynamics (gstar, Hubble, HoverHbarVisible),     */
-/* constants (Me, MPl, alphaEM), and quadrature includes     */
-/* come from FreezeIn.h.                                     */
-/*************************************************************/
+/*************************************************************************/
+/* Vector-Vector (VV) case: e+ e- -> Aprime -> chi chi                   */
+/* Pure kinetic mixing, electron channel only.                           */
+/*                                                                       */
+/* Matrix element is the Aprime piece of Eq. S4 in Bhattiprolu, McGehee  */
+/* & Pierce (arXiv:2312.14152), with Nf = 1 and Qf = -1 (so Qf^2 = 1);   */
+/* no Z exchange, no Aprime/Z interference. The coupling is              */
+/* kappa = epsilon*sqrt(alpha'/alpha). Collision-term prefactor          */
+/* 16T/(4 pi)^5 matches the BMP convention for this M2 -- do NOT swap    */
+/* in the AA-case prefactor T/((8 pi)^2 (2 pi)^3).                       */
+/*                                                                       */
+/* REPLACES the previous VV section (M2_eechichi_VV, e2EM, and the old   */
+/* CollisionNum_chi_VV / yield functions).                               */
+/*************************************************************************/
 
-//Electromagnetic coupling squared: e^2 = 4 pi alphaEM
-const long double e2EM = 4.0L*M_PI*alphaEM;
+//Fully averaged matrix element squared for e+ e- -> Aprime -> chi chi
+long double M2_eechichi_VV(long double s, long double mchi,
+                           long double kappa) {
 
-//Fully averaged matrix element squared for e+ e- -> Aprime -> chi chi (VV)
-//M2VV = (gD^2 e^2)/(3 pi^2) * (1 + 2(me^2 + mchi^2)/s + 4 me^2 mchi^2/s^2)
-long double M2_eechichi_VV(long double s, long double mchi, long double gD) {
-
-    return (gD*gD*e2EM/(3.0L*M_PI*M_PI)) *
-           (1.0L + 2.0L*(Me*Me + mchi*mchi)/s + 4.0L*Me*Me*mchi*mchi/(s*s));
+    return (32.0L/3.0L)*M_PI*M_PI*alphaEM*alphaEM*kappa*kappa*
+           (1.0L + 2.0L*Me*Me/s)*(1.0L + 2.0L*mchi*mchi/s);
 }
 
 //Number-density collision term for e+ e- -> Aprime -> chi chi (VV case)
 long double CollisionNum_chi_VV(long double T, long double mchi,
-                                long double gD) {
+                                long double kappa) {
 
     auto integrand_s = [=] (long double s) {
-        return M2_eechichi_VV(s, mchi, gD) *
+        return M2_eechichi_VV(s, mchi, kappa) *
                sqrt(1.0L - 4.0L*mchi*mchi/s) *
                sqrt(1.0L - 4.0L*Me*Me/s) *
-               sqrt(s) * boost::math::cyl_bessel_k(1, sqrt(s)/T);
+               sqrt(s) *
+               boost::math::cyl_bessel_k(1, sqrt(s)/T);
     };
 
-    return (T/(pow(8.0L*M_PI, 2)*pow(2.0L*M_PI, 3))) *
+    return (16.0L*T/pow(4.0L*M_PI, 5.0L)) *
            exp_sinh<long double>().integrate(integrand_s,
-               max(4.0L*Me*Me, 4.0L*mchi*mchi), INFINITY);
+                                        max(4.0L*Me*Me, 4.0L*mchi*mchi),
+                                        INFINITY);
 }
 
-//Running yield (VV case): integrate the freeze-in integrand from Tlow to Thigh
-long double Yield_FreezeIn_partial_VV(long double mchi, long double gD,
+//Running yield (VV case), integrated in u = ln(T).
+//Guards: Tlow = 0 is floored at max(mchi, Me)/50 (the electron channel
+//opens at 2*max(mchi, Me), so the rate is Boltzmann-dead below this);
+//Thigh = infinity is capped at 1e6 GeV, where the ~1/T^2 tail
+//contributes at the ~1e-6 relative level.
+long double Yield_FreezeIn_partial_VV(long double mchi, long double kappa,
                                       long double Tlow, long double Thigh) {
 
-    auto integrand_T = [=] (long double T) {
-        return HoverHbarVisible(T) *
-               CollisionNum_chi_VV(T, mchi, gD) /
+    long double Tmin = max(mchi, (long double)Me)/50.0L;
+    if (Tlow < Tmin) Tlow = Tmin;
+
+    if (isinf(Thigh)) Thigh = 1.0e6L;
+
+    if (Thigh <= Tlow) return 0.0L;
+
+    auto integrand_u = [=] (long double u) {
+        long double T = exp(u);
+        return T * HoverHbarVisible(T) *
+               CollisionNum_chi_VV(T, mchi, kappa) /
                (gstarS(T)*sqrt(gstar(T))*pow(T, 6.0L));
     };
     return (135.0L*sqrt(10.0L)*MPl/(2.0L*pow(M_PI, 3.0L))) *
-           gauss<long double, 701>().integrate(integrand_T, Tlow, Thigh);
+           gauss<long double, 701>().integrate(integrand_u,
+                                               log(Tlow), log(Thigh));
 }
 
 //Portal Yield for Chi (VV case): full integral from T = 0 up to Trh
-long double Yield_FreezeIn_VV(long double mchi, long double gD,
+long double Yield_FreezeIn_VV(long double mchi, long double kappa,
                               long double Trh) {
-    return Yield_FreezeIn_partial_VV(mchi, gD, 0.0L, Trh);
+    return Yield_FreezeIn_partial_VV(mchi, kappa, 0.0L, Trh);
 }
 
-//Portal coupling, gD, for freezing-in the required relic abundance (VV case).
-//Since M2 ~ gD^2, the yield scales as Y(gD) = gD^2 * Y(gD=1), and the relic
-//condition 2 mchi Y = 4.37e-10 GeV gives
-//    gD = sqrt( 4.37e-10 / (2 mchi Y(gD=1)) ).
+//Portal coupling for freezing-in the required relic abundance (VV case).
+//This is kappa = epsilon*sqrt(alpha'/alpha). Since M2 ~ kappa^2:
+//    kappa = sqrt( 4.37e-10 / (2 mchi Y(kappa=1)) ).
+//(The paper's kappa_FI = 1.94e-11 at mchi = 1 MeV includes ALL SM
+//channels; the electron-only value here will differ somewhat.)
 long double gD_FreezeIn(long double mchi, long double Trh) {
     if (Trh == 0.0L) {
         Trh = INFINITY;
