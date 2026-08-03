@@ -298,8 +298,101 @@ PYBIND11_MODULE(FreezeIn, mod)
     Returns
     -------
  
-    Portal coupling gD that reproduces the observed dark matter relic
-    abundance in the Vector-Vector case (electron channel only)
+    Portal coupling kappa = epsilon*sqrt(alpha'/alpha) that reproduces the
+    observed dark matter relic abundance in the Vector-Vector case
+    (pure kinetic mixing, electron channel only)
     )pbdoc", py::arg("mchi"), py::arg("Trh"));
- 
+
+    /**********************************************************/
+    /* Axial-Vector (AV) case: f f -> Aprime -> chi chi       */
+    /**********************************************************/
+
+    //CollisionNum_chi_AV(T, mchi, gD, qh1, tb, anom_mass, LambdaQCD)
+    mod.def("CollisionNum_chi_AV", &CollisionNum_chi_AV, R"pbdoc(
+    Inputs
+    ------
+
+    T: Temperature in the visible sector in GeV
+    mchi: mass of the dark matter in GeV
+    gD: portal coupling
+    qh1: lepton Higgs charge
+    tb: ratio of Higgs vacuum expectation values (tan(beta))
+    anom_mass: anomalon mass scale. Set to 0 = no anomalons
+    LambdaQCD: QCD confinement scale in GeV
+
+    Returns
+    -------
+
+    Sum of the number-density collision terms for SM SMbar -> chi chibar
+    in the Axial-Vector case (all fermion channels)
+    )pbdoc", py::arg("T"), py::arg("mchi"), py::arg("gD"), py::arg("qh1"),
+             py::arg("tb"), py::arg("anom_mass"), py::arg("LambdaQCD"));
+
+    //Yield_FreezeIn_AV(mchi, gD, qh1, tb, anom_mass, LambdaQCD, Trh)
+    mod.def("Yield_FreezeIn_AV", &Yield_FreezeIn_AV, R"pbdoc(
+    Inputs
+    ------
+
+    mchi: mass of the dark matter in GeV
+    gD: portal coupling
+    qh1: lepton Higgs charge
+    tb: ratio of Higgs vacuum expectation values (tan(beta))
+    anom_mass: anomalon mass scale. Set to 0 = no anomalons
+    LambdaQCD: QCD confinement scale in GeV
+    Trh: instantaneous reheating temperature. Setting to 0.0 will NOT be
+         remapped here; pass the desired upper limit explicitly
+
+    Returns
+    -------
+
+    Portal yield for freeze-in dark matter in the Axial-Vector case,
+    integrated from T = 0 up to Trh
+    )pbdoc", py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("tb"),
+             py::arg("anom_mass"), py::arg("LambdaQCD"), py::arg("Trh"));
+
+    //Yield_FreezeIn_partial_AV(mchi, gD, qh1, tb, anom_mass, LambdaQCD,
+    //                          Tlow, Thigh)
+    mod.def("Yield_FreezeIn_partial_AV", &Yield_FreezeIn_partial_AV, R"pbdoc(
+    Inputs
+    ------
+
+    mchi: mass of the dark matter in GeV
+    gD: portal coupling
+    qh1: lepton Higgs charge
+    tb: ratio of Higgs vacuum expectation values (tan(beta))
+    anom_mass: anomalon mass scale. Set to 0 = no anomalons
+    LambdaQCD: QCD confinement scale in GeV
+    Tlow: lower limit of the temperature integral in GeV
+    Thigh: upper limit of the temperature integral in GeV
+
+    Returns
+    -------
+
+    Running (cumulative) portal yield in the Axial-Vector case,
+    integrated from Tlow up to Thigh
+    )pbdoc", py::arg("mchi"), py::arg("gD"), py::arg("qh1"), py::arg("tb"),
+             py::arg("anom_mass"), py::arg("LambdaQCD"),
+             py::arg("Tlow"), py::arg("Thigh"));
+
+    //gD_FreezeIn_AV(mchi, qh1, tb, anom_mass, LambdaQCD, Trh)
+    mod.def("gD_FreezeIn_AV", &gD_FreezeIn_AV, R"pbdoc(
+    Inputs
+    ------
+
+    mchi: mass of the dark matter in GeV
+    qh1: lepton Higgs charge
+    tb: ratio of Higgs vacuum expectation values (tan(beta))
+    anom_mass: anomalon mass scale. Set to 0 = no anomalons
+    LambdaQCD: QCD confinement scale in GeV
+    Trh: instantaneous reheating temperature. Setting to 0.0 will set it
+         to infinity
+
+    Returns
+    -------
+
+    Portal coupling gD that reproduces the observed dark matter relic
+    abundance in the Axial-Vector case
+    )pbdoc", py::arg("mchi"), py::arg("qh1"), py::arg("tb"),
+             py::arg("anom_mass"), py::arg("LambdaQCD"), py::arg("Trh"));
+
 };

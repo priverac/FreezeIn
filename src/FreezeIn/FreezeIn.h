@@ -506,4 +506,181 @@ long double gD_FreezeIn(long double mchi, long double Trh) {
                );
 }
 
+/*************************************************************************/
+/* Axial-Vector (AV) case: f f -> Aprime -> chi chi                      */
+/*                                                                       */
+/* M2 = 2 ( Achi^2 Vf^2 + 4 Af Achi Vf Vchi + Af^2 Vchi^2 )              */
+/*                                                                       */
+/* Vector couplings (species-dependent):                                 */
+/*   V_lep  = (1/2) gD qH1 [ 1 + 2(-1/2 + 2 sW2)/(1 + tb^2) ]            */
+/*   V_up   =       gD qH1 ( 1/2 - (4/3) sW2 )/(1 + tb^2)                */
+/*   V_down =       gD qH1 (-1/2 + (2/3) sW2 )/(1 + tb^2)                */
+/*   V_chi  = (1/2) gD                                                   */
+/*                                                                       */
+/* Axial couplings: carried over from the AA section with gD explicit,   */
+/*   A_f   = (1/2) gD qH1 thetaD,   thetaL = (2+tb^2)/(1+tb^2)           */
+/*                                  thetaQ =       1 /(1+tb^2)           */
+/*   A_chi = (1/2) gD                                                    */
+/*                                                                       */
+/* Collision-term prefactor T/((8 pi)^2 (2 pi)^3) matches the AA-case    */
+/* convention (this M2 is in the same normalization as M2_ffchichi) --   */
+/* do NOT use the VV-case prefactor 16T/(4 pi)^5.                        */
+/*                                                                       */
+/* As in the AA case, Nf only gates the quark channels at LambdaQCD --   */
+/* there is no N_c = 3 color multiplier.                                 */
+/*                                                                       */
+/* Nothing in the AA or VV sections is modified by this block.           */
+/*************************************************************************/
+
+//Fully averaged matrix element squared for f f -> Aprime -> chi chi (AV)
+long double M2_ffchichi_AV(long double s, long double mchi, long double mf,
+                           long double gD, long double Nf, long double qH,
+                           long double tb, long double thetaD,
+                           long double Vf) {
+
+    //Axial pieces
+    long double Af = 0.5L*gD*qH*thetaD;
+    long double Ac = 0.5L*gD;
+
+    //Vector piece of the Aprime chi chi coupling
+    long double Vc = 0.5L*gD;
+
+    return 2.0L*( Ac*Ac*Vf*Vf
+                  + 4.0L*Af*Ac*Vf*Vc
+                  + Af*Af*Vc*Vc );
+}
+
+//Number-density collision term for f f -> Aprime -> chi chi (AV case)
+long double CollisionNum_ffchichi_AV(long double T, long double mchi,
+                                     long double mf, long double gD,
+                                     long double Nf, long double qH,
+                                     long double tb, long double LambdaQCD,
+                                     long double thetaD, long double Vf) {
+
+    if ( ( Nf == 1.0L ) || ( (Nf == 3.0L) && (T > LambdaQCD) ) ) {
+
+        auto integrand_s = [=] (long double s) {
+            return M2_ffchichi_AV(s, mchi, mf, gD, Nf, qH, tb, thetaD, Vf) *
+                   sqrt(1.0L - 4.0L*mchi*mchi/s) *
+                   sqrt(1.0L - 4.0L*mf*mf/s) *
+                   sqrt(s) *
+                   boost::math::cyl_bessel_k(1, sqrt(s)/T);
+        };
+
+        return (T/(pow(8.0L*M_PI, 2)*pow(2.0L*M_PI, 3))) *
+               exp_sinh<long double>().integrate(integrand_s,
+                                            max(4.0L*mf*mf, 4.0L*mchi*mchi),
+                                            INFINITY);
+    }
+    else { return 0.0L; }
+}
+
+//Sum of all number-density collision terms for portal freeze-in (AV case)
+long double CollisionNum_chi_AV(long double T, long double mchi,
+                                long double gD, long double qh1,
+                                long double tb, long double anom_mass,
+                                long double LambdaQCD) {
+
+    long double tb2 = pow(tb, 2);
+
+    //Axial theta factors (as in the AA case)
+    long double thetaL = (2.0L + tb2)/(1.0L + tb2); /*leptons*/
+    long double thetaQ = (1.0L)/(1.0L + tb2);       /*quarks*/
+
+    //Vector couplings
+    long double Vlep  = 0.5L*gD*qh1*(1.0L + 2.0L*(-0.5L + 2.0L*sW2)/(1.0L + tb2));
+    long double Vup   = gD*qh1*(0.5L - (4.0L/3.0L)*sW2)/(1.0L + tb2);
+    long double Vdown = gD*qh1*(-0.5L + (2.0L/3.0L)*sW2)/(1.0L + tb2);
+
+    long double result = 0.0L;
+
+    result += CollisionNum_ffchichi_AV(T, mchi, Me,  gD, 1.0L, qh1, tb,
+                                       LambdaQCD, thetaL, Vlep);  /*e*/
+    result += CollisionNum_ffchichi_AV(T, mchi, Mmu, gD, 1.0L, qh1, tb,
+                                       LambdaQCD, thetaL, Vlep);  /*mu*/
+    result += CollisionNum_ffchichi_AV(T, mchi, Mta, gD, 1.0L, qh1, tb,
+                                       LambdaQCD, thetaL, Vlep);  /*ta*/
+    result += CollisionNum_ffchichi_AV(T, mchi, Mu,  gD, 3.0L, qh1, tb,
+                                       LambdaQCD, thetaQ, Vup);   /*u*/
+    result += CollisionNum_ffchichi_AV(T, mchi, Mc,  gD, 3.0L, qh1, tb,
+                                       LambdaQCD, thetaQ, Vup);   /*c*/
+    result += CollisionNum_ffchichi_AV(T, mchi, Mt,  gD, 3.0L, qh1, tb,
+                                       LambdaQCD, thetaQ, Vup);   /*t*/
+    result += CollisionNum_ffchichi_AV(T, mchi, Md,  gD, 3.0L, qh1, tb,
+                                       LambdaQCD, thetaQ, Vdown); /*d*/
+    result += CollisionNum_ffchichi_AV(T, mchi, Ms,  gD, 3.0L, qh1, tb,
+                                       LambdaQCD, thetaQ, Vdown); /*s*/
+    result += CollisionNum_ffchichi_AV(T, mchi, Mb,  gD, 3.0L, qh1, tb,
+                                       LambdaQCD, thetaQ, Vdown); /*b*/
+
+    if (anom_mass != 0.0L) {
+        result += CollisionNum_ffchichi_AV(T, mchi, anom_mass, gD, 1.0L, qh1,
+                                           tb, LambdaQCD, thetaL, Vlep); /*E*/
+    }
+
+    return result;
+}
+
+//Running yield (AV case), integrated in u = ln(T).
+//Guards: Tlow = 0 is floored at max(mchi, Me)/50 (the lightest channel is
+//the electron, opening at 2*max(mchi, Me), so the rate is Boltzmann-dead
+//below this); Thigh = infinity is capped at 1e6 GeV, where the ~1/T^2 tail
+//contributes at the ~1e-6 relative level.
+long double Yield_FreezeIn_partial_AV(long double mchi, long double gD,
+                                      long double qh1, long double tb,
+                                      long double anom_mass,
+                                      long double LambdaQCD,
+                                      long double Tlow, long double Thigh) {
+
+    long double Tmin = max(mchi, (long double)Me)/50.0L;
+    if (Tlow < Tmin) Tlow = Tmin;
+
+    if (isinf(Thigh)) Thigh = 1.0e6L;
+
+    if (Thigh <= Tlow) return 0.0L;
+
+    auto integrand_u = [=] (long double u) {
+        long double T = exp(u);
+        return T * HoverHbarVisible(T) *
+               CollisionNum_chi_AV(T, mchi, gD, qh1, tb, anom_mass,
+                                   LambdaQCD) /
+               (gstarS(T)*sqrt(gstar(T))*pow(T, 6.0L));
+    };
+    return (135.0L*sqrt(10.0L)*MPl/(2.0L*pow(M_PI, 3.0L))) *
+           gauss<long double, 701>().integrate(integrand_u,
+                                               log(Tlow), log(Thigh));
+}
+
+//Portal Yield for Chi (AV case): full integral from T = 0 up to Trh
+long double Yield_FreezeIn_AV(long double mchi, long double gD,
+                              long double qh1, long double tb,
+                              long double anom_mass, long double LambdaQCD,
+                              long double Trh) {
+    return Yield_FreezeIn_partial_AV(mchi, gD, qh1, tb, anom_mass, LambdaQCD,
+                                     0.0L, Trh);
+}
+
+//Portal coupling, gD, for freezing-in the required relic abundance (AV).
+//Every coupling in M2 carries one power of gD, so M2 ~ gD^4 and the yield
+//scales as Y(gD) = gD^4 * Y(gD=1). The relic condition 2 mchi Y = 4.37e-10
+//then gives
+//    gD = ( 4.37e-10 / (2 mchi Y(gD=1)) )^{1/4}.
+//Note the coupling sits in the NUMERATOR of the yield here, so this is the
+//reciprocal of the vD_FreezeIn inversion (where Y ~ 1/vD^4).
+long double gD_FreezeIn_AV(long double mchi, long double qh1, long double tb,
+                           long double anom_mass, long double LambdaQCD,
+                           long double Trh) {
+    if (Trh == 0.0L) {
+        Trh = INFINITY;
+    }
+    return pow(
+                4.37e-10L /
+                (2.0L * mchi * Yield_FreezeIn_AV(mchi, 1.0L, qh1, tb,
+                                                 anom_mass, LambdaQCD, Trh)),
+                0.25L
+               );
+}
+
+
+
 #endif
