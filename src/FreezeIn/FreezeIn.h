@@ -537,17 +537,25 @@ long double M2_ffchichi_AV(long double s, long double mchi, long double mf,
                            long double gD, long double Nf, long double qH,
                            long double tb, long double thetaD,
                            long double Vf) {
-
+ 
     //Axial pieces
     long double Af = 0.5L*gD*qH*thetaD;
     long double Ac = 0.5L*gD;
-
+ 
     //Vector piece of the Aprime chi chi coupling
     long double Vc = 0.5L*gD;
-
-    return 2.0L*( Ac*Ac*Vf*Vf
-                  + 4.0L*Af*Ac*Vf*Vc
-                  + Af*Af*Vc*Vc );
+ 
+    //The two coupling combinations that appear
+    long double AfVc2 = Af*Af*Vc*Vc;  /*Af^2 Vchi^2*/
+    long double AcVf2 = Ac*Ac*Vf*Vf;  /*Achi^2 Vf^2*/
+ 
+    long double mf2   = mf*mf;
+    long double mchi2 = mchi*mchi;
+ 
+    return (4.0L/3.0L)*(AfVc2 + AcVf2)
+           + (8.0L/(3.0L*s))*( AfVc2*(mchi2 - 2.0L*mf2)
+                             + AcVf2*(mf2 - 2.0L*mchi2) )
+           - (32.0L*mf2*mchi2/(3.0L*s*s))*(AfVc2 + AcVf2);
 }
 
 //Number-density collision term for f f -> Aprime -> chi chi (AV case)
