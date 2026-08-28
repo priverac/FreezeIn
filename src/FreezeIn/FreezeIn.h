@@ -419,52 +419,114 @@ long double SigmaDDe(long double mchi, long double vD, long double qh1, long dou
 }
 
 /*************************************************************************/
-/* Vector-Vector (VV) case: e+ e- -> Aprime -> chi chi                   */
-/* Pure kinetic mixing, electron channel only.                           */
+/* Vector-Vector (VV) case: f f -> Aprime -> chi chi                     */
+/* Pure kinetic mixing, ALL charged SM fermions.                         */
 /*                                                                       */
 /* Matrix element is the Aprime piece of Eq. S4 in Bhattiprolu, McGehee  */
-/* & Pierce (arXiv:2312.14152), with Nf = 1 and Qf = -1 (so Qf^2 = 1);   */
-/* no Z exchange, no Aprime/Z interference. The coupling is              */
-/* kappa = epsilon*sqrt(alpha'/alpha). Collision-term prefactor          */
-/* 16T/(4 pi)^5 matches the BMP convention for this M2 -- do NOT swap    */
-/* in the AA-case prefactor T/((8 pi)^2 (2 pi)^3).                       */
+/* & Pierce (arXiv:2312.14152):                                          */
 /*                                                                       */
-/* REPLACES the previous VV section (M2_eechichi_VV, e2EM, and the old   */
-/* CollisionNum_chi_VV / yield functions).                               */
+/*   M2 = (32/3) Nf pi^2 alpha^2 kappa^2 Qf^2                            */
+/*        * (1 + 2 mf^2/s) (1 + 2 mchi^2/s)                              */
+/*                                                                       */
+/* No Z exchange and no Aprime/Z interference, so neutrinos (Qf = 0) do  */
+/* NOT contribute and are omitted. Also omitted, as before: pi+pi-,      */
+/* K+K-, W+W-, and plasmon decays -- fermion channels only.              */
+/*                                                                       */
+/* The coupling is kappa = epsilon*sqrt(alpha'/alpha).                   */
+/*                                                                       */
+/* NOTE: unlike the AA/AV cases, Nf here is a genuine multiplier (the    */
+/* color factor) as well as the LambdaQCD gate for quarks.               */
+/*                                                                       */
+/* Collision-term prefactor 16T/(4 pi)^5 matches the BMP convention for  */
+/* this M2 -- do NOT swap in the AA/AV prefactor T/((8 pi)^2 (2 pi)^3).  */
+/*                                                                       */
+/* REPLACES the electron-only VV section (M2_eechichi_VV and the old     */
+/* CollisionNum_chi_VV / yield / gD_FreezeIn functions).                 */
 /*************************************************************************/
 
-//Fully averaged matrix element squared for e+ e- -> Aprime -> chi chi
-long double M2_eechichi_VV(long double s, long double mchi,
-                           long double kappa) {
+//Fully averaged matrix element squared for f f -> Aprime -> chi chi (VV)
+long double M2_ffchichi_VV(long double s, long double mchi, long double mf,
+                           long double kappa, long double Nf,
+                           long double Qf) {
 
-    return (32.0L/3.0L)*M_PI*M_PI*alphaEM*alphaEM*kappa*kappa*
-           (1.0L + 2.0L*Me*Me/s)*(1.0L + 2.0L*mchi*mchi/s);
+    return (32.0L/3.0L)*Nf*M_PI*M_PI*alphaEM*alphaEM*kappa*kappa*Qf*Qf*
+           (1.0L + 2.0L*mf*mf/s)*(1.0L + 2.0L*mchi*mchi/s);
 }
 
-//Number-density collision term for e+ e- -> Aprime -> chi chi (VV case)
+//Number-density collision term for f f -> Aprime -> chi chi (VV case)
+long double CollisionNum_ffchichi_VV(long double T, long double mchi,
+                                     long double mf, long double kappa,
+                                     long double Nf, long double Qf,
+                                     long double LambdaQCD) {
+
+    if ( ( Nf == 1.0L ) || ( (Nf == 3.0L) && (T > LambdaQCD) ) ) {
+
+        auto integrand_s = [=] (long double s) {
+            return M2_ffchichi_VV(s, mchi, mf, kappa, Nf, Qf) *
+                   sqrt(1.0L - 4.0L*mchi*mchi/s) *
+                   sqrt(1.0L - 4.0L*mf*mf/s) *
+                   sqrt(s) *
+                   boost::math::cyl_bessel_k(1, sqrt(s)/T);
+        };
+
+        return (16.0L*T/pow(4.0L*M_PI, 5.0L)) *
+               exp_sinh<long double>().integrate(integrand_s,
+                                            max(4.0L*mf*mf, 4.0L*mchi*mchi),
+                                            INFINITY);
+    }
+    else { return 0.0L; }
+}
+
+//Individual number-density collision terms for each fermion species (VV).
+//Returns a name->value map, mirroring CollisionNum_chi_individual.
+map<string, long double> CollisionNum_chi_individual_VV(long double T,
+        long double mchi, long double kappa, long double LambdaQCD) {
+
+    map<string, long double> contribs;
+
+    contribs["e"]  = CollisionNum_ffchichi_VV(T, mchi, Me,  kappa,
+                                              1.0L, -1.0L, LambdaQCD);
+    contribs["mu"] = CollisionNum_ffchichi_VV(T, mchi, Mmu, kappa,
+                                              1.0L, -1.0L, LambdaQCD);
+    contribs["ta"] = CollisionNum_ffchichi_VV(T, mchi, Mta, kappa,
+                                              1.0L, -1.0L, LambdaQCD);
+    contribs["u"]  = CollisionNum_ffchichi_VV(T, mchi, Mu,  kappa,
+                                              3.0L, 2.0L/3.0L, LambdaQCD);
+    contribs["c"]  = CollisionNum_ffchichi_VV(T, mchi, Mc,  kappa,
+                                              3.0L, 2.0L/3.0L, LambdaQCD);
+    contribs["t"]  = CollisionNum_ffchichi_VV(T, mchi, Mt,  kappa,
+                                              3.0L, 2.0L/3.0L, LambdaQCD);
+    contribs["d"]  = CollisionNum_ffchichi_VV(T, mchi, Md,  kappa,
+                                              3.0L, -1.0L/3.0L, LambdaQCD);
+    contribs["s"]  = CollisionNum_ffchichi_VV(T, mchi, Ms,  kappa,
+                                              3.0L, -1.0L/3.0L, LambdaQCD);
+    contribs["b"]  = CollisionNum_ffchichi_VV(T, mchi, Mb,  kappa,
+                                              3.0L, -1.0L/3.0L, LambdaQCD);
+
+    return contribs;
+}
+
+//Sum of all number-density collision terms for portal freeze-in (VV case)
 long double CollisionNum_chi_VV(long double T, long double mchi,
-                                long double kappa) {
+                                long double kappa, long double LambdaQCD) {
 
-    auto integrand_s = [=] (long double s) {
-        return M2_eechichi_VV(s, mchi, kappa) *
-               sqrt(1.0L - 4.0L*mchi*mchi/s) *
-               sqrt(1.0L - 4.0L*Me*Me/s) *
-               sqrt(s) *
-               boost::math::cyl_bessel_k(1, sqrt(s)/T);
-    };
+    map<string, long double> contribs =
+        CollisionNum_chi_individual_VV(T, mchi, kappa, LambdaQCD);
 
-    return (16.0L*T/pow(4.0L*M_PI, 5.0L)) *
-           exp_sinh<long double>().integrate(integrand_s,
-                                        max(4.0L*Me*Me, 4.0L*mchi*mchi),
-                                        INFINITY);
+    long double result = 0.0L;
+    for (const auto& kv : contribs) result += kv.second;
+
+    return result;
 }
 
 //Running yield (VV case), integrated in u = ln(T).
-//Guards: Tlow = 0 is floored at max(mchi, Me)/50 (the electron channel
-//opens at 2*max(mchi, Me), so the rate is Boltzmann-dead below this);
-//Thigh = infinity is capped at 1e6 GeV, where the ~1/T^2 tail
-//contributes at the ~1e-6 relative level.
+//Guards: Tlow = 0 is floored at max(mchi, Me)/50. The electron is still
+//the lightest contributing channel (neutrinos have Qf = 0 and drop out),
+//so the lightest threshold is 2*max(mchi, Me) and the rate is
+//Boltzmann-dead below this. Thigh = infinity is capped at 1e6 GeV, where
+//the ~1/T^2 tail contributes at the ~1e-6 relative level.
 long double Yield_FreezeIn_partial_VV(long double mchi, long double kappa,
+                                      long double LambdaQCD,
                                       long double Tlow, long double Thigh) {
 
     long double Tmin = max(mchi, (long double)Me)/50.0L;
@@ -477,7 +539,7 @@ long double Yield_FreezeIn_partial_VV(long double mchi, long double kappa,
     auto integrand_u = [=] (long double u) {
         long double T = exp(u);
         return T * HoverHbarVisible(T) *
-               CollisionNum_chi_VV(T, mchi, kappa) /
+               CollisionNum_chi_VV(T, mchi, kappa, LambdaQCD) /
                (gstarS(T)*sqrt(gstar(T))*pow(T, 6.0L));
     };
     return (135.0L*sqrt(10.0L)*MPl/(2.0L*pow(M_PI, 3.0L))) *
@@ -487,22 +549,23 @@ long double Yield_FreezeIn_partial_VV(long double mchi, long double kappa,
 
 //Portal Yield for Chi (VV case): full integral from T = 0 up to Trh
 long double Yield_FreezeIn_VV(long double mchi, long double kappa,
-                              long double Trh) {
-    return Yield_FreezeIn_partial_VV(mchi, kappa, 0.0L, Trh);
+                              long double LambdaQCD, long double Trh) {
+    return Yield_FreezeIn_partial_VV(mchi, kappa, LambdaQCD, 0.0L, Trh);
 }
 
 //Portal coupling for freezing-in the required relic abundance (VV case).
 //This is kappa = epsilon*sqrt(alpha'/alpha). Since M2 ~ kappa^2:
 //    kappa = sqrt( 4.37e-10 / (2 mchi Y(kappa=1)) ).
-//(The paper's kappa_FI = 1.94e-11 at mchi = 1 MeV includes ALL SM
-//channels; the electron-only value here will differ somewhat.)
-long double gD_FreezeIn(long double mchi, long double Trh) {
+//(The paper's kappa_FI = 1.94e-11 at mchi = 1 MeV additionally includes
+//Z exchange, pi+pi-, K+K-, W+W-, and plasmon decays.)
+long double gD_FreezeIn(long double mchi, long double LambdaQCD,
+                        long double Trh) {
     if (Trh == 0.0L) {
         Trh = INFINITY;
     }
     return sqrt(
                 4.37e-10L /
-                (2.0L * mchi * Yield_FreezeIn_VV(mchi, 1.0L, Trh))
+                (2.0L * mchi * Yield_FreezeIn_VV(mchi, 1.0L, LambdaQCD, Trh))
                );
 }
 
